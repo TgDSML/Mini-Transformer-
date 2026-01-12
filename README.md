@@ -27,9 +27,7 @@ The implementation closely follows the original paper:
 
 - Scaled Dot-Product Attention
 - Multi-Head Attention
-- Positional Encoding
-  - Sinusoidal
-  - Learnable (optional)
+- Positional Encoding (sinusoidal & learnable)
 - Position-wise Feed-Forward Network
 - Transformer Encoder Layer
 - Residual connections & Layer Normalization
@@ -40,51 +38,31 @@ The implementation closely follows the original paper:
 
 ## 📂 Repository Structure
 
-Mini-Transformer-/
-│
-├── data/
-│   └── (optional datasets or toy data)
-│
-├── src/
-│   ├── layers/
-│   │   ├── attention.py
-│   │   ├── feedforward.py
-│   │   ├── positional_encoding.py
-│   │   └── normalization.py
-│   │
-│   ├── models/
-│   │   └── encoder.py
-│   │
-│   ├── utils/
-│   │   └── helper functions
-│   │
-│   └── __init__.py
-│
-├── tests/
-│   ├── test_attention.py
-│   ├── test_feedforward.py
-│   ├── test_positional_encoding.py
-│
-├── main.py
-├── requirements.txt
-├── .gitignore
-└── README.md
+- data/
+- src/
+  - layers/
+    - attention.py
+    - feedforward.py
+    - positional_encoding.py
+    - normalization.py
+  - models/
+    - encoder.py
+  - utils/
+  - __init__.py
+- tests/
+  - test_attention.py
+  - test_feedforward.py
+  - test_positional_encoding.py
+- main.py
+- requirements.txt
+- .gitignore
+- README.md
 
 ---
 
-## 🧪 Testing Philosophy
+## 🧪 Testing
 
-This project places strong emphasis on **correctness and reliability**.
-
-Unit tests verify:
-
-- Shape consistency
-- Proper attention behavior
-- Residual connections preserving dimensions
-- Positional encoding correctness
-- Gradient flow through the encoder
-
-Run all tests with:
+Run all unit tests:
 
     pytest -q
 
@@ -101,7 +79,7 @@ Create virtual environment:
 
     python -m venv .venv
 
-Activate environment:
+Activate:
 
 Windows:
     .\.venv\Scripts\Activate.ps1
@@ -121,49 +99,35 @@ Run the main script:
 
     python main.py
 
-The `main.py` file performs a **forward pass through the Transformer encoder**, typically using randomly generated input or a small toy example, to validate:
-
-- Model construction
-- Forward propagation
-- Output shapes
-- Gradient flow
-
-> This project is intentionally minimal and does **not** include full training on large datasets.
+The script performs a forward pass through the Transformer encoder using toy or random input to validate correctness and gradient flow.
 
 ---
 
 ## 🧠 Design Philosophy
 
-- **Clarity over abstraction**
-- **Explicit implementations** instead of magic wrappers
-- **Educational value first**
-- Modular components that mirror the Transformer paper structure
-- Suitable for:
-  - Learning
-  - Teaching
-  - Interview preparation
-  - Further research extensions
+- Clarity over abstraction
+- Explicit implementations
+- Educational focus
+- Modular, testable components
+- Suitable for learning, teaching, interviews, and research
 
 ---
 
 ## 📈 Project Status
 
-- ✅ Scaled Dot-Product Attention implemented
-- ✅ Multi-Head Attention implemented
-- ✅ Positional Encodings (sinusoidal & learnable)
-- ✅ Transformer Encoder Layer assembled
-- ✅ Comprehensive unit tests
-- 🚧 Extensions & experimentation ongoing
+- ✅ Core Transformer components implemented
+- ✅ Encoder assembled
+- ✅ Unit-tested
+- 🚧 Extensions ongoing
 
 ---
 
 ## 🔮 Future Improvements
 
-- Decoder implementation
-- Full Transformer (Encoder-Decoder)
-- Training loop on a toy language modeling task
+- Decoder & full Transformer
+- Training loop
 - Attention visualization
-- Benchmark against PyTorch’s `nn.Transformer`
+- Benchmark vs PyTorch Transformer
 
 ---
 
@@ -172,10 +136,5 @@ The `main.py` file performs a **forward pass through the Transformer encoder**, 
 - Vaswani et al., *Attention Is All You Need*, 2017
 - PyTorch documentation
 
----
-
-## 📌 Notes
-
-This repository is part of a **hands-on learning journey into Transformers and modern NLP architectures**, and is intentionally kept lightweight and readable.
 
 
