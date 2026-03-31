@@ -6,6 +6,7 @@ from src.layers.feedforward import FeedForward
 from src.layers.positional import SinusoidalPositionalEncoding
 from src.layers.positional import LearnablePositionalEncoding
 from src.models.encoder import TransformerEncoderLayer
+from src.models.transformer_lm import TransformerEncoderLM
 
 
 def test_attention_shapes_happy_path():
@@ -313,6 +314,28 @@ def test_attention_train_vs_eval_modes():
     print("Train vs Eval mode test passed: weights properly dropped & renormalized in train, untouched in eval.")
 
 
+def test_attention_full_mask_row_is_stable():
+    batch_size = 1
+    seq_len_q = 2
+    seq_len_k = seq_len_v = 3
+    d_k = 4
+    d_v = 4
+
+    Q = torch.randn(batch_size, seq_len_q, d_k)
+    K = torch.randn(batch_size, seq_len_k, d_k)
+    V = torch.randn(batch_size, seq_len_v, d_v)
+
+    mask = torch.tensor([[[1, 1, 1], [0, 0, 0]]], dtype=torch.bool)
+
+    attn = ScaledDotProductAttention(dropout=0.0)
+    context, attn_weights = attn(Q, K, V, mask)
+
+    assert not torch.isnan(attn_weights).any(), "Attention weights contain NaNs with a fully masked row"
+    assert not torch.isnan(context).any(), "Context contains NaNs with a fully masked row"
+    assert torch.allclose(attn_weights[:, 1], torch.zeros_like(attn_weights[:, 1])), \
+        "Fully masked queries should produce zero attention weights"
+
+
 def test_multihead_attention_output_shape():
     batch_size =2
     seq_length = 5
@@ -519,6 +542,38 @@ def test_transformer_encoder_gradient_flow():
 
     assert X.grad is not None, "Gradient did not flow back to input"
     print("Gradient successfully flowed through the encoder layer.")
+
+
+def test_transformer_lm_generate_extends_sequence():
+    model = TransformerEncoderLM(
+        vocab_size=8,
+        d_model=16,
+        n_heads=4,
+        d_ff=32,
+        num_layers=2,
+        dropout=0.0,
+    )
+    idx = torch.randint(0, 8, (1, 3))
+
+    out = model.generate(idx, max_new_tokens=5, temperature=1.0)
+
+    assert out.shape == (1, 8), f"Expected generated shape (1, 8), got {out.shape}"
+
+
+def test_transformer_lm_generate_with_top_k_extends_sequence():
+    model = TransformerEncoderLM(
+        vocab_size=8,
+        d_model=16,
+        n_heads=4,
+        d_ff=32,
+        num_layers=2,
+        dropout=0.0,
+    )
+    idx = torch.randint(0, 8, (1, 3))
+
+    out = model.generate(idx, max_new_tokens=5, temperature=1.0, top_k=3)
+
+    assert out.shape == (1, 8), f"Expected generated shape (1, 8), got {out.shape}"
 
     
 
