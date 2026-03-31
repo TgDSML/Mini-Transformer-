@@ -1,5 +1,3 @@
-	
-import os, io, glob 
 import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
@@ -66,8 +64,6 @@ def make_loaders(
     split: float = 0.8,
     shuffle: bool = True,
     ):
-
-    text = open("data/tiny_shakespeare.txt")
     tok = CharTokenizer(path_)
     ids = tok.encode(tok.text)
 
@@ -82,6 +78,17 @@ def make_loaders(
     # Datasets 
     train_ds = CharLMSequenceDataset(train_ids, seq_len)
     val_ds = CharLMSequenceDataset(val_ids, seq_len)
+
+    if len(train_ds) == 0:
+        raise ValueError(
+            f"Training split is too short for seq_len={seq_len}. "
+            f"Need more than {seq_len} tokens, got {len(train_ids)}."
+        )
+    if len(val_ds) == 0:
+        raise ValueError(
+            f"Validation split is too short for seq_len={seq_len}. "
+            f"Need more than {seq_len} tokens, got {len(val_ids)}."
+        )
 
     # Loaders
     train_loader = DataLoader(

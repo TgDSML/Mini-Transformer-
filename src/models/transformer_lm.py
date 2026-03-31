@@ -75,7 +75,7 @@ class TransformerEncoderLM(nn.Module):
         targets: (B, T) tensor of next-token ids"""
         
         # Unpacking the shape of the input tensor idx
-        B, T = idx.shape
+        _, T = idx.shape
 
         # Token Embeddings : (B, T) -> (B, T, d_model)
         x = self.tok_emb(idx)
@@ -89,7 +89,12 @@ class TransformerEncoderLM(nn.Module):
         # Keeps desired positions as true and all "future" positions as False
         # Adding two single dimensions so shapes become (1,1,T,T) in order to:
         # Be broadcastable across batch dimension B and also across all attn heads
-        mask = torch.ones((T,T), dtype=torch.bool).tril_().unsqueeze(0).unsqueeze(1) # (1,1,T,T)
+        mask = (
+            torch.ones((T, T), dtype=torch.bool, device=idx.device)
+            .tril_()
+            .unsqueeze(0)
+            .unsqueeze(1)
+        ) # (1,1,T,T)
         
         # Pass through the N encoder layers with the mask
         for layer in self.layers:
@@ -104,7 +109,42 @@ class TransformerEncoderLM(nn.Module):
 
         # CE over all positions (standard LM loss)
         loss = F.cross_entropy(
-            logits.view(-1, self.vocab_size),
-            targets.view(-1),
+            logits.reshape(-1, self.vocab_size),
+            targets.reshape(-1),
             )
         return logits, loss
+
+    @torch.no_grad()
+    def generate(
+        self,
+        idx: torch.Tensor,
+        max_new_tokens: int,
+        temperature: float = 1.0,
+        top_k: int | None = None,
+    ) -> torch.Tensor:
+        if temperature <= 0:
+            raise ValueError("temperature must be positive")
+        if top_k is not None and top_k <= 0:
+            raise ValueError("top_k must be positive when provided")
+
+        was_training = self.training
+        self.eval()
+
+        for _ in range(max_new_tokens):
+            logits = self(idx)
+            next_token_logits = logits[:, -1, :] / temperature
+            if top_k is not None and top_k < next_token_logits.size(-1):
+                top_values, _ = torch.topk(next_token_logits, k=top_k, dim=-1)
+                cutoff = top_values[:, [-1]]
+                next_token_logits = next_token_logits.masked_fill(
+                    next_token_logits < cutoff,
+                    float("-inf"),
+                )
+            probs = F.softmax(next_token_logits, dim=-1)
+            next_token = torch.multinomial(probs, num_samples=1)
+            idx = torch.cat((idx, next_token), dim=1)
+
+        if was_training:
+            self.train()
+
+        return idx
